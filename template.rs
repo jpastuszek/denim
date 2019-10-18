@@ -1,4 +1,4 @@
-#!/usr/bin/env cotton
+#!/usr/bin/env denim
 
 //
 // Example script description

@@ -72,18 +72,16 @@ fn write_template<'i>(script: &Path, project_name: &str) -> Result<()> {
     Ok(())
 }
 
-fn main() -> Result<()> {
-    if let Some(script) = std::env::args().skip(1).next().and_then(|arg1| arg1.ends_with(".rs").as_some(arg1)) {
+fn main() -> FinalResult {
+    if let Some(script) = std::env::args().skip(1).next().filter(|arg1| PathBuf::from(arg1).is_file()) {
         problem::format_panic_to_stderr();
-
-        let project = Project::new(PathBuf::from(script)).or_failed_to("initialize project");
+        let project = Project::new(PathBuf::from(script))?;
 
         if !project.has_binary() {
-            project.cargo().or_failed_to("initialize cargo project").ensure_built(CargoMode::Silent).or_failed_to("build script");
+            project.cargo()?.ensure_built(CargoMode::Silent)?;
         }
 
         project.execute(std::env::args().skip(2)).unwrap();
-
         unreachable!()
     }
 
@@ -92,41 +90,41 @@ fn main() -> Result<()> {
 
     match args.script_action {
         ScriptAction::New { script } => {
-            let project_name = script.file_stem().unwrap().to_str().ok_or_problem("Script stem is not UTF-8 compatible")?;
+            let project_name = script.file_stem().ok_or_problem("Path has no file name")?.to_str().ok_or_problem("Script stem is not UTF-8 compatible")?;
             info!("Generating new sciprt {:?} in {}", project_name, script.display());
-
-            write_template(&script, project_name).or_failed_to("write script template");
+            write_template(&script, project_name)?;
         }
         ScriptAction::Exec { script, arguments } => {
-            let project = Project::new(script).or_failed_to("initialize project");
-            let cargo = project.cargo().or_failed_to("initialize cargo project");
-            cargo.ensure_built(CargoMode::Verbose).or_failed_to("update_and_build script binary");
-            project.execute(arguments).unwrap();
+            let project = Project::new(script)?;
+            let cargo = project.cargo()?;
+            cargo.ensure_built(CargoMode::Verbose)?;
+            project.execute(arguments)?;
         }
         ScriptAction::Build { script } => {
-            let project = Project::new(script).or_failed_to("initialize project");
-            let cargo = project.cargo().or_failed_to("initialize cargo project");
-            cargo.ensure_built(CargoMode::Verbose).or_failed_to("build script binary");
+            let project = Project::new(script)?;
+            let cargo = project.cargo()?;
+            cargo.ensure_built(CargoMode::Verbose)?;
         }
         ScriptAction::Check { script } => {
-            let project = Project::new(script).or_failed_to("initialize project");
-            let cargo = project.cargo().or_failed_to("initialize cargo project");
-            cargo.ensure_updated().or_failed_to("update cargo project");
-            cargo.check().or_failed_to("check script");
+            let project = Project::new(script)?;
+            let cargo = project.cargo()?;
+            cargo.ensure_updated()?;
+            cargo.check()?;
         }
         ScriptAction::Test { script } => {
-            let project = Project::new(script).or_failed_to("initialize project");
-            let cargo = project.cargo().or_failed_to("initialize cargo project");
-            cargo.ensure_updated().or_failed_to("update cargo project");
-            cargo.test().or_failed_to("test script");
+            let project = Project::new(script)?;
+            let cargo = project.cargo()?;
+            cargo.ensure_updated()?;
+            cargo.test()?;
         }
         ScriptAction::Clean { script } => {
-            let project = Project::new(script).or_failed_to("initialize project");
-            project.clean().or_failed_to("clean script repository");
+            let project = Project::new(script)?;
+            project.clean()?;
         }
         ScriptAction::CleanAll => {
-            Project::clean_all().or_failed_to("clean script repository");
+            Project::clean_all()?;
         }
     }
+
     Ok(())
 }

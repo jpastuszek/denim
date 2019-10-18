@@ -13,7 +13,7 @@ pub struct Project {
 impl Project {
     pub fn new(script: PathBuf) -> Result<Project> {
         let script = script.canonicalize().problem_while_with(|| format!("accessing script file path {:?}", script.display()))?;
-        info!("Script path: {}", script.display());
+        debug!("Script path: {}", script.display());
 
         if !script.is_file() {
             return Err(Problem::from_error(format!("Script {:?} is not a file", script.display())))
@@ -28,7 +28,7 @@ impl Project {
         let parent_path_digest = hex_digest(Some(parent_path))[0..16].to_string();
         debug!("Parent path: {} (digest: {})", parent_path, parent_path_digest);
 
-        let name = script.file_stem().unwrap().to_str().ok_or_problem("Script stem is not UTF-8 compatible")?.to_owned();
+        let name = script.file_stem().ok_or_problem("Scipt path has no file stem")?.to_str().ok_or_problem("Script stem is not UTF-8 compatible")?.to_owned();
         debug!("Project name: {}", name);
 
         let home = app_cache(format!("project-{}-{}", parent_path_digest, name).as_str())?;
