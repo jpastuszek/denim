@@ -11,6 +11,14 @@ const MODE_USER_EXEC: u32 = 0o100;
 enum ScriptAction {
     /// Create new scipt from template
     New {
+        /// Create bare minimum template
+        #[structopt(short, long)]
+        bare: bool,
+
+        /// Don't pre-build the script
+        #[structopt(short, long)]
+        no_prebuild: bool,
+
         /// Path to script file
         script: PathBuf,
     },
@@ -56,9 +64,7 @@ struct Cli {
     script_action: ScriptAction,
 }
 
-fn write_template<'i>(script: &Path, project_name: &str) -> Result<()> {
-    let template = format!(include_str!("../template.rs"), name = project_name);
-
+fn write_template<'i>(script: &Path, template: String) -> Result<()> {
     fs::write(script, &template).problem_while("writing template to new scipt file")?;
 
     let file = File::open(script).unwrap();
@@ -89,10 +95,21 @@ fn main() -> FinalResult {
     init_logger(&args.logging, vec![module_path!()]);
 
     match args.script_action {
-        ScriptAction::New { script } => {
+        ScriptAction::New { bare, no_prebuild, script } => {
             let project_name = script.file_stem().ok_or_problem("Path has no file name")?.to_str().ok_or_problem("Script stem is not UTF-8 compatible")?;
             info!("Generating new sciprt {:?} in {}", project_name, script.display());
-            write_template(&script, project_name)?;
+
+            if bare {
+                write_template(&script, format!(include_str!("../templates/bare.rs"), name = project_name))?;
+            } else {
+                write_template(&script, format!(include_str!("../templates/cotton.rs"), name = project_name))?;
+            }
+
+            if !no_prebuild {
+                let project = Project::new(script)?;
+                let cargo = project.cargo()?;
+                cargo.ensure_built(CargoMode::Verbose)?;
+            }
         }
         ScriptAction::Exec { script, arguments } => {
             let project = Project::new(script)?;
