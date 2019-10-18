@@ -2,8 +2,8 @@ use cotton::prelude::*;
 use cotton::problem;
 use std::os::unix::fs::PermissionsExt;
 
-mod cargo;
-use cargo::{CargoMode, Cargo};
+mod project;
+use project::{Project, CargoMode};
 
 const MODE_USER_EXEC: u32 = 0o100;
 
@@ -76,13 +76,13 @@ fn main() -> Result<()> {
     if let Some(script) = std::env::args().skip(1).next().and_then(|arg1| arg1.ends_with(".rs").as_some(arg1)) {
         problem::format_panic_to_stderr();
 
-        let cargo = Cargo::new(PathBuf::from(script)).or_failed_to("initialize cargo project");
+        let project = Project::new(PathBuf::from(script)).or_failed_to("initialize project");
 
-        if !cargo.binary_built() {
-            cargo.ensure_built(CargoMode::Silent).or_failed_to("build script");
+        if !project.has_binary() {
+            project.cargo().or_failed_to("initialize cargo project").ensure_built(CargoMode::Silent).or_failed_to("build script");
         }
 
-        cargo.execute(std::env::args().skip(2)).unwrap();
+        project.execute(std::env::args().skip(2)).unwrap();
 
         unreachable!()
     }
@@ -98,30 +98,34 @@ fn main() -> Result<()> {
             write_template(&script, project_name).or_failed_to("write script template");
         }
         ScriptAction::Exec { script, arguments } => {
-            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            let project = Project::new(script).or_failed_to("initialize project");
+            let cargo = project.cargo().or_failed_to("initialize cargo project");
             cargo.ensure_built(CargoMode::Verbose).or_failed_to("update_and_build script binary");
-            cargo.execute(arguments).unwrap();
+            project.execute(arguments).unwrap();
         }
         ScriptAction::Build { script } => {
-            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            let project = Project::new(script).or_failed_to("initialize project");
+            let cargo = project.cargo().or_failed_to("initialize cargo project");
             cargo.ensure_built(CargoMode::Verbose).or_failed_to("build script binary");
         }
         ScriptAction::Check { script } => {
-            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            let project = Project::new(script).or_failed_to("initialize project");
+            let cargo = project.cargo().or_failed_to("initialize cargo project");
             cargo.ensure_updated().or_failed_to("update cargo project");
             cargo.check().or_failed_to("check script");
         }
         ScriptAction::Test { script } => {
-            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
+            let project = Project::new(script).or_failed_to("initialize project");
+            let cargo = project.cargo().or_failed_to("initialize cargo project");
             cargo.ensure_updated().or_failed_to("update cargo project");
             cargo.test().or_failed_to("test script");
         }
         ScriptAction::Clean { script } => {
-            let cargo = Cargo::new(script).or_failed_to("initialize cargo project");
-            cargo.clean().or_failed_to("clean script repository");
+            let project = Project::new(script).or_failed_to("initialize project");
+            project.clean().or_failed_to("clean script repository");
         }
         ScriptAction::CleanAll => {
-            Cargo::clean_all().or_failed_to("clean script repository");
+            Project::clean_all().or_failed_to("clean script repository");
         }
     }
     Ok(())
