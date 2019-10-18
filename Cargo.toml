@@ -3,6 +3,13 @@ name = "denim"
 version = "0.1.0"
 authors = ["Jakub Pastuszek <jpastuszek@protonmail.com>"]
 edition = "2018"
+description = "Denim is an alternative way to make and run Rust \"scripts\" with focus on minimal runtime overhead and ease of script development."
+repository = "https://github.com/jpastuszek/denim"
+documentation = "https://docs.rs/denim"
+readme = "README.md"
+keywords = ["cli", "prelude", "scripts"]
+categories = ["command-line-interface"]
+license = "MIT"
 
 [dependencies]
 cotton = "0.0.4"
