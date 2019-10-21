@@ -12,5 +12,5 @@ categories = ["command-line-interface"]
 license = "MIT"
 
 [dependencies]
-cotton = "0.0.4"
+cotton = "0.0.5"
 structopt = "0.3.3"

@@ -46,7 +46,7 @@ impl Project {
         Cargo::new(self)
     }
 
-    pub(self) fn binary_path(&self) -> PathBuf {
+    pub fn binary_path(&self) -> PathBuf {
         self.home.join(&self.name)
     }
 
@@ -56,9 +56,8 @@ impl Project {
     }
 
     /// Replace this image with imange of the binary.
-    pub fn execute<I>(&self, args: I) -> Result<()> where I: IntoIterator, I::Item: AsRef<OsStr> {
-        // TODO: replace return with ! when stable
-        Err(Problem::from_error(exec(self.binary_path(), args)).problem_while("executing compiled binary"))
+    pub fn execute<I>(&self, arguments: &[I]) -> Result<Infallible> where I: AsRef<OsStr> {
+        exec_with_name(&self.binary_path(), &self.name, arguments).problem_while("executing compiled binary")
     }
 
     pub fn clean(&self) -> Result<()> {

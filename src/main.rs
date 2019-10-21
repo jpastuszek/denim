@@ -87,7 +87,7 @@ fn main() -> FinalResult {
             project.cargo()?.ensure_built(CargoMode::Silent)?;
         }
 
-        project.execute(std::env::args().skip(2)).unwrap();
+        project.execute(&std::env::args().skip(2).collect::<Vec<_>>()).unwrap();
         unreachable!()
     }
 
@@ -115,7 +115,7 @@ fn main() -> FinalResult {
             let project = Project::new(script)?;
             let cargo = project.cargo()?;
             cargo.ensure_built(CargoMode::Verbose)?;
-            project.execute(arguments)?;
+            project.execute(&arguments)?;
         }
         ScriptAction::Build { script } => {
             let project = Project::new(script)?;

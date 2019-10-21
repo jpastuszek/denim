@@ -122,7 +122,7 @@ dependencies = [
 
 [[package]]
 name = "cotton"
-version = "0.0.4"
+version = "0.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -145,7 +145,7 @@ dependencies = [
 name = "denim"
 version = "0.1.0"
 dependencies = [
- "cotton 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "cotton 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "structopt 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -646,7 +646,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 "checksum chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)" = "e8493056968583b0193c1bb04d6f7684586f3726992d6c573261941a895dbd68"
 "checksum clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5067f5bb2d80ef5d68b4c87db81601f0b75bca627bc2ef76b141d7b846a3c6d9"
-"checksum cotton 0.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "add2ca69dccb898e74d3a7585656703ecda4bc8bb45ceddf026250020facf852"
+"checksum cotton 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "06f5931372bf8c8511a80654b429ee227d3cc51feedfed0c80b38bb647eb24d0"
 "checksum duct 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)" = "5db881d9db1674cb1e40cb225319e3a149ef85b50fd99e09fd75d26bf766de59"
 "checksum either 1.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
 "checksum errno 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "c2a071601ed01b988f896ab14b95e67335d1eeb50190932a1320f7fe3cadc84e"
