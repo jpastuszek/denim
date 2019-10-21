@@ -12,9 +12,8 @@ authors = ["Anonymous"]
 edition = "2018"
 
 [dependencies]
-cotton = "*"
-# NOTE: this depencency may need to be downgraded for compatibility with cotton
-structopt = "*"
+cotton = "0.0.5"
+structopt = "0.3.2"
 */
 
 use cotton::prelude::*;
