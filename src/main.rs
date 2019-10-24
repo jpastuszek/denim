@@ -5,6 +5,8 @@ use std::os::unix::fs::PermissionsExt;
 mod project;
 use project::{Project, CargoMode};
 
+//TODO: set Cargo.toml project name based on file name or they can get out of sync and break
+
 const MODE_USER_EXEC: u32 = 0o100;
 
 #[derive(Debug, StructOpt)]
@@ -78,7 +80,18 @@ fn write_template<'i>(script: &Path, template: String) -> Result<()> {
     Ok(())
 }
 
+/// Sets USER env if not set as cargo requires it
+fn stub_user_env() {
+    use std::env;
+
+    if env::var("USER").is_err() {
+        env::set_var("USER", "root"); // no idea if this is OK
+    }
+}
+
 fn main() -> FinalResult {
+    stub_user_env();
+
     if let Some(script) = std::env::args().skip(1).next().filter(|arg1| PathBuf::from(arg1).is_file()) {
         problem::format_panic_to_stderr();
         let project = Project::new(PathBuf::from(script))?;
