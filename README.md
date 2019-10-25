@@ -14,6 +14,13 @@ Denim is an alternative way to make and run Rust "scripts" with focus on minimal
 * Run inline scripts - use `cargo script(er)` for this.
 * Non Linux support.
 
+# Installation
+
+You will need Rust installed (tested with 1.37.0).
+```sh
+cargo install denim
+```
+
 # Examples
 
 Crate new minimal script and build it.
