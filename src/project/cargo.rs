@@ -1,5 +1,6 @@
 use cotton::prelude::*;
 use super::Project;
+use serde_json::Value;
 
 #[derive(Debug, Clone, Copy)]
 pub enum CargoMode {
@@ -49,8 +50,32 @@ impl<'p> Cargo<'p> {
         })
     }
 
-    fn release_target_path(&self) -> PathBuf {
-        self.project.home.join("target").join("release").join(&self.project.name)
+    /// Runs cargo build with JSON output to get executable path.
+    ///
+    /// Assuming we already have built the crate and this will actually just get output of build in
+    /// JSON.
+    fn built_executable_path(&self) -> Result<PathBuf> {
+        // ask cargo for information about target binary file name as it depends on Cargo.toml
+        // project name
+        let out = cmd!("cargo", "build", "--message-format=json", "--release")
+            .dir(&self.project.home)
+            .stdout_capture()
+            .stderr_null() // assuming nothing useful here as we would have built the project already
+            .run().problem_while("getting build metadata")?.stdout;
+
+        let out = String::from_utf8(out).or_failed_to("get valid UTF-8 output from cargo JSON");
+        let mut lines = out.lines().collect::<Vec<_>>();
+
+        // NOTE: executable will be probably logged last
+        lines.reverse();
+
+        let executable = lines.into_iter()
+            .map(|line| serde_json::from_str(line))
+            .or_failed_to("parse cargo JSON message")
+            .find_map(|line: Value| line.get("executable").and_then(Value::as_str).map(ToOwned::to_owned))
+            .ok_or_problem("Failed to find executable path in cargo JSON output")?;
+
+        Ok(executable.into())
     }
 
     fn main_path(&self) -> PathBuf {
@@ -121,7 +146,7 @@ impl<'p> Cargo<'p> {
         }
         .problem_while("running cargo build")?;
 
-        fs::rename(self.release_target_path(), self.project.binary_path()).problem_while("moving compiled target final location")?;
+        fs::rename(self.built_executable_path()?, self.project.binary_path()).problem_while("moving compiled target final location")?;
 
         Ok(())
     }
