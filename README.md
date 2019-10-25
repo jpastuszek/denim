@@ -14,19 +14,28 @@ Denim is an alternative way to make and run Rust "scripts" with focus on minimal
 * Run inline scripts - use `cargo script(er)` for this.
 * Non Linux support.
 
-# Example
-Crate new minimal script and execute it.
+# Examples
 
+Crate new minimal script and build it.
 ```sh
 denim new --bare hello_world
+```
+
+Crate new [cotton](https://github.com/jpastuszek/cotton) prelude script and build it (this will take a moment).
+```sh
+denim new hello_world
+```
+
+Now you can run the script as any other binary.
+Note that you can also run the script without building it first - the build will be done silently before program is executed.
+```sh
 ./hello_world
 ```
 
-Crate new Cotton prelude script and execute it.
-
+After making changes to script it needs to be rebuild for them to take effect.
+Executing script directly (e.g. `./hello_world`) will execute last built version until changed script builds successfully.
 ```sh
-denim new hello_world
-./hello_world
+denim build hello_world
 ```
 
 Rebuild and run script after making changes.
