@@ -1,9 +1,5 @@
 #!/usr/bin/env denim
 
-//
-// Example script description
-//
-
 /* Cargo.toml
 [package]
 name = "{name}"
@@ -18,9 +14,7 @@ structopt = "0.3.2"
 
 use cotton::prelude::*;
 
-// See: https://docs.rs/structopt/0.3.2/structopt/index.html#how-to-derivestructopt
-
-/// Does stuff
+/// Example script description
 #[derive(Debug, StructOpt)]
 struct Cli {{
     #[structopt(flatten)]
