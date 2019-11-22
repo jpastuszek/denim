@@ -8,7 +8,7 @@ authors = ["Anonymous"]
 edition = "2018"
 
 [dependencies]
-cotton = "0.0.5"
+cotton = "0.0.7"
 structopt = "0.3.2"
 */
 
