@@ -66,8 +66,8 @@ struct Cli {
     script_action: ScriptAction,
 }
 
-fn write_template<'i>(script: &Path, template: String) -> Result<()> {
-    fs::write(script, &template).problem_while("writing template to new scipt file")?;
+fn write_template<'i>(script: &Path, template: String) -> PResult<()> {
+    write(script, &template).problem_while("writing template to new scipt file")?;
 
     let file = File::open(script).unwrap();
     let meta = file.metadata().unwrap();
@@ -75,7 +75,7 @@ fn write_template<'i>(script: &Path, template: String) -> Result<()> {
     perm.set_mode(perm.mode() | MODE_USER_EXEC);
     drop(file);
 
-    fs::set_permissions(script, perm).problem_while("setting executable permission")?;
+    set_permissions(script, perm).problem_while("setting executable permission")?;
 
     Ok(())
 }

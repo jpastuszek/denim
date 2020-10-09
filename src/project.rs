@@ -11,7 +11,7 @@ pub struct Project {
 }
 
 impl Project {
-    pub fn new(script: PathBuf) -> Result<Project> {
+    pub fn new(script: PathBuf) -> PResult<Project> {
         let script = script.canonicalize().problem_while_with(|| format!("accessing script file path {:?}", script.display()))?;
         debug!("Script path: {}", script.display());
 
@@ -42,7 +42,7 @@ impl Project {
     }
 
     /// Convert to Cargo repository
-    pub fn cargo(&self) -> Result<Cargo> {
+    pub fn cargo(&self) -> PResult<Cargo> {
         Cargo::new(self)
     }
 
@@ -56,21 +56,21 @@ impl Project {
     }
 
     /// Replace this image with imange of the binary.
-    pub fn execute<I>(&self, arguments: &[I]) -> Result<Infallible> where I: AsRef<OsStr> {
+    pub fn execute<I>(&self, arguments: &[I]) -> PResult<Infallible> where I: AsRef<OsStr> {
         exec_with_name(&self.binary_path(), &self.name, arguments).problem_while("executing compiled binary")
     }
 
-    pub fn clean(&self) -> Result<()> {
+    pub fn clean(&self) -> PResult<()> {
         info!("Removing content of {}", self.home.display());
-        fs::remove_dir_all(&self.home)?;
+        remove_dir_all(&self.home)?;
         Ok(())
     }
 
-    pub fn clean_all() -> Result<()> {
+    pub fn clean_all() -> PResult<()> {
         let project_root = app_cache(None)?;
 
         info!("Removing content of {}", project_root.display());
-        fs::remove_dir_all(&project_root)?;
+        remove_dir_all(&project_root)?;
         Ok(())
     }
 }

@@ -39,7 +39,7 @@ pub struct Cargo<'p> {
 }
 
 impl<'p> Cargo<'p> {
-    pub fn new(project: &Project) -> Result<Cargo> {
+    pub fn new(project: &Project) -> PResult<Cargo> {
         if !project.home.join("src").exists() {
             info!("Initializing cargo project in {}", project.home.display());
             cmd!("cargo", "init", "--quiet", "--vcs", "none", "--name", &project.name, "--bin", "--edition", "2018", &project.home).silent().problem_while("running cargo init")?;
@@ -54,7 +54,7 @@ impl<'p> Cargo<'p> {
     ///
     /// Assuming we already have built the crate and this will actually just get output of build in
     /// JSON.
-    fn built_executable_path(&self) -> Result<PathBuf> {
+    fn built_executable_path(&self) -> PResult<PathBuf> {
         // ask cargo for information about target binary file name as it depends on Cargo.toml
         // project name
         let out = cmd!("cargo", "build", "--message-format=json", "--release")
@@ -86,12 +86,12 @@ impl<'p> Cargo<'p> {
         self.project.home.join("Cargo.toml")
     }
 
-    fn script_content(&self) -> Result<String> {
+    fn script_content(&self) -> PResult<String> {
         // TODO: read up to _DATA_ marker and provide File object seeked at first byte after it
-        Ok(fs::read_to_string(&self.project.script).problem_while("reading script contents")?)
+        Ok(read_to_string(&self.project.script).problem_while("reading script contents")?)
     }
 
-    fn manifest_content(&self) -> Result<String> {
+    fn manifest_content(&self) -> PResult<String> {
         let manifest = self.script_content()?
             .lines()
             .map(|l| l.trim())
@@ -108,7 +108,7 @@ impl<'p> Cargo<'p> {
     }
 
     /// Checks state of the repository and script.
-    pub fn state(&self) -> Result<CargoState> {
+    pub fn state(&self) -> PResult<CargoState> {
         if hex_digest(Some(self.script_content()?.as_str())) != hex_digest_file(&self.main_path())? {
             return Ok(CargoState::ScriptDiffers)
         }
@@ -120,7 +120,7 @@ impl<'p> Cargo<'p> {
         }
 
         // binary should be newer than the script file or we have a failed build of the script
-        if fs::metadata(&binary_path)?.modified()? < fs::metadata(&self.project.script)?.modified()? {
+        if metadata(&binary_path)?.modified()? < metadata(&self.project.script)?.modified()? {
             return Ok(CargoState::BinaryOutdated)
         }
 
@@ -128,17 +128,17 @@ impl<'p> Cargo<'p> {
     }
 
     /// Updates repository from the script file.
-    pub fn update(&self) -> Result<()> {
+    pub fn update(&self) -> PResult<()> {
         info!("Updating project");
 
-        fs::write(&self.main_path(), self.script_content()?).problem_while("writing new main.rs file")?;
-        fs::write(&self.manifest_path(), self.manifest_content()?).problem_while("writing new Cargo.toml file")?;
+        write(&self.main_path(), self.script_content()?).problem_while("writing new main.rs file")?;
+        write(&self.manifest_path(), self.manifest_content()?).problem_while("writing new Cargo.toml file")?;
 
         Ok(())
     }
 
     /// Builds cargo project.
-    pub fn build(&self, mode: CargoMode) -> Result<()> {
+    pub fn build(&self, mode: CargoMode) -> PResult<()> {
         info!("Building release target");
         match mode {
             CargoMode::Silent => cmd!("cargo", "build", "--release").dir(&self.project.home).silent(),
@@ -146,13 +146,13 @@ impl<'p> Cargo<'p> {
         }
         .problem_while("running cargo build")?;
 
-        fs::rename(self.built_executable_path()?, self.project.binary_path()).problem_while("moving compiled target final location")?;
+        rename(self.built_executable_path()?, self.project.binary_path()).problem_while("moving compiled target final location")?;
 
         Ok(())
     }
 
     /// Prepares executable
-    pub fn ensure_updated(&self) -> Result<()> {
+    pub fn ensure_updated(&self) -> PResult<()> {
         let state = self.state()?;
         if state.needs_update() {
             self.update()?;
@@ -161,7 +161,7 @@ impl<'p> Cargo<'p> {
     }
 
     /// Prepares executable
-    pub fn ensure_built(&self, mode: CargoMode) -> Result<()> {
+    pub fn ensure_built(&self, mode: CargoMode) -> PResult<()> {
         let state = self.state()?;
         debug!("State: {:?}", state);
         if state.needs_update() {
@@ -174,14 +174,14 @@ impl<'p> Cargo<'p> {
     }
 
     /// Runs 'cargo check' on updated repository
-    pub fn check(&self) -> Result<()> {
+    pub fn check(&self) -> PResult<()> {
         self.update()?;
         cmd!("cargo", "check", "--color", "always").dir(&self.project.home).exec().problem_while("running cargo check")?;
         Ok(())
     }
 
     /// Runs 'cargo test' on updated repository
-    pub fn test(&self) -> Result<()> {
+    pub fn test(&self) -> PResult<()> {
         self.update()?;
         cmd!("cargo", "test", "--color", "always").dir(&self.project.home).exec().problem_while("running cargo test")?;
         Ok(())
