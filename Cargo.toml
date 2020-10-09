@@ -1,6 +1,6 @@
 [package]
 name = "denim"
-version = "0.1.4"
+version = "0.1.5-alpha.0"
 authors = ["Jakub Pastuszek <jpastuszek@protonmail.com>"]
 edition = "2018"
 description = "Denim is an alternative way to make and run Rust \"scripts\" with focus on minimal runtime overhead and ease of script development."
