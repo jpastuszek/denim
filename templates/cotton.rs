@@ -32,3 +32,5 @@ fn main() -> FinalResult {{
 
     Ok(())
 }}
+
+// vim: ft=rust
