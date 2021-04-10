@@ -17,3 +17,5 @@ edition = "2018"
 fn main() {{
     println!("Hello world!");
 }}
+
+// vim: ft=rust
