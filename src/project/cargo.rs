@@ -42,7 +42,14 @@ impl<'p> Cargo<'p> {
     pub fn new(project: &Project) -> PResult<Cargo> {
         if !project.home.join("src").exists() {
             info!("Initializing cargo project in {}", project.home.display());
-            cmd!("cargo", "init", "--quiet", "--vcs", "none", "--name", &project.name, "--bin", "--edition", "2018", &project.home).silent().problem_while("running cargo init")?;
+            collect_errors(run_result!(
+                "cargo", "init",
+                "--quiet",
+                "--vcs", "none",
+                "--name", &project.name,
+                "--bin", &project.home
+                ).problem_while("running cargo init")?)
+            .problem_while("initializing cargo project")?;
         }
 
         Ok(Cargo {
@@ -57,13 +64,12 @@ impl<'p> Cargo<'p> {
     fn built_executable_path(&self) -> PResult<PathBuf> {
         // ask cargo for information about target binary file name as it depends on Cargo.toml
         // project name
-        let out = cmd!("cargo", "build", "--message-format=json", "--release")
-            .dir(&self.project.home)
-            .stdout_capture()
-            .stderr_null() // assuming nothing useful here as we would have built the project already
-            .run().problem_while("getting build metadata")?.stdout;
+        let out = collect_output_and_errors(run_result!(
+                CurrentDir(&self.project.home),
+                "cargo", "build", "--message-format=json", "--release"
+            ).problem_while("running cargo build")?
+        ).problem_while("getting build metadata")?;
 
-        let out = String::from_utf8(out).or_failed_to("get valid UTF-8 output from cargo JSON");
         let mut lines = out.lines().collect::<Vec<_>>();
 
         // NOTE: executable will be probably logged last
@@ -141,10 +147,15 @@ impl<'p> Cargo<'p> {
     pub fn build(&self, mode: CargoMode) -> PResult<()> {
         info!("Building release target");
         match mode {
-            CargoMode::Silent => cmd!("cargo", "build", "--release").dir(&self.project.home).silent(),
-            CargoMode::Verbose => cmd!("cargo", "build", "--color", "always", "--release").dir(&self.project.home).exec(),
+            CargoMode::Silent => collect_output_and_errors(
+                run_result!(CurrentDir(&self.project.home), "cargo", "build", "--release")
+                    .problem_while("running cargo build")?)
+                    .map(drop),
+            CargoMode::Verbose => check_status(
+                run_result!(CurrentDir(&self.project.home), "cargo", "build", "--color", "always", "--release")
+                    .problem_while("running cargo build")?),
         }
-        .problem_while("running cargo build")?;
+        .problem_while("building cargo project")?;
 
         rename(self.built_executable_path()?, self.project.binary_path()).problem_while("moving compiled target final location")?;
 
@@ -176,14 +187,22 @@ impl<'p> Cargo<'p> {
     /// Runs 'cargo check' on updated repository
     pub fn check(&self) -> PResult<()> {
         self.update()?;
-        cmd!("cargo", "check", "--color", "always").dir(&self.project.home).exec().problem_while("running cargo check")?;
+        check_status(run_result!(
+            CurrentDir(&self.project.home),
+            "cargo", "check", "--color", "always")
+                .problem_while("running cargo check")?)
+            .problem_while("running cargo check")?;
         Ok(())
     }
 
     /// Runs 'cargo test' on updated repository
     pub fn test(&self) -> PResult<()> {
         self.update()?;
-        cmd!("cargo", "test", "--color", "always").dir(&self.project.home).exec().problem_while("running cargo test")?;
+        check_status(run_result!(
+            CurrentDir(&self.project.home),
+            "cargo", "test", "--color", "always")
+                .problem_while("running cargo test")?)
+            .problem_while("running cargo test")?;
         Ok(())
     }
 }

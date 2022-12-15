@@ -9,16 +9,16 @@ use project::{Project, CargoMode};
 
 const MODE_USER_EXEC: u32 = 0o100;
 
-#[derive(Debug, StructOpt)]
+#[derive(Subcommand)]
 enum ScriptAction {
     /// Create new scipt from template
     New {
         /// Create bare minimum template
-        #[structopt(short, long)]
+        #[arg(short = 'b', long)]
         bare: bool,
 
         /// Don't pre-build the script
-        #[structopt(short, long)]
+        #[arg(short = 'n', long)]
         no_prebuild: bool,
 
         /// Path to script file
@@ -57,10 +57,10 @@ enum ScriptAction {
 }
 
 /// Single file rust scritps.
-#[derive(Debug, StructOpt)]
+#[derive(Parser)]
 struct Cli {
     #[structopt(flatten)]
-    logging: LoggingOpt,
+    logging: ArgsLogger,
 
     #[structopt(subcommand)]
     script_action: ScriptAction,
@@ -104,10 +104,13 @@ fn main() -> FinalResult {
         unreachable!()
     }
 
-    let args = Cli::from_args();
-    init_logger(&args.logging, vec![module_path!()]);
+    let Cli {
+        logging,
+        script_action,
+    } = Cli::parse();
+    setup_logger(logging, vec![module_path!()]);
 
-    match args.script_action {
+    match script_action {
         ScriptAction::New { bare, no_prebuild, script } => {
             let project_name = script.file_stem().ok_or_problem("Path has no file name")?.to_str().ok_or_problem("Script stem is not UTF-8 compatible")?;
             info!("Generating new sciprt {:?} in {}", project_name, script.display());

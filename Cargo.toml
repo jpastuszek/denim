@@ -12,6 +12,6 @@ categories = ["command-line-interface"]
 license = "MIT"
 
 [dependencies]
-cotton = "0.0.13"
-structopt = "0.3.3"
-serde_json = "1.0.41"
+#cotton = "0.0.20"
+cotton = { path = "../cotton", default-features = false, features = ["errors", "args", "logging", "app", "hashing", "process"] }
+serde_json = "1.0.89"
