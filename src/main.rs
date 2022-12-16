@@ -90,6 +90,7 @@ fn stub_user_env() {
 }
 
 fn main() -> FinalResult {
+    init_app_info!();
     stub_user_env();
 
     if let Some(script) = std::env::args().skip(1).next().filter(|arg1| PathBuf::from(arg1).is_file()) {
