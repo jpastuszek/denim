@@ -40,7 +40,7 @@ enum ScriptAction {
         script: PathBuf,
 
         /// Arguments for the script
-        arguments: Vec<String>, //TODO: OsString not supported
+        arguments: Vec<OsString>,
     },
     /// Build, stage for fast execution and execute
     Run {
@@ -48,7 +48,7 @@ enum ScriptAction {
         script: PathBuf,
 
         /// Arguments for the script
-        arguments: Vec<String>, //TODO: OsString not supported
+        arguments: Vec<OsString>,
     },
     /// Build and run tests
     Test {
