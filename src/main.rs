@@ -5,8 +5,6 @@ use std::os::unix::fs::PermissionsExt;
 mod project;
 use project::{Project, CargoMode};
 
-//TODO: set Cargo.toml project name based on file name or they can get out of sync and break
-
 const MODE_USER_EXEC: u32 = 0o100;
 
 #[derive(Subcommand)]
