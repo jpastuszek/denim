@@ -7,7 +7,7 @@ authors = ["Anonymous"]
 edition = "2021"
 
 [dependencies]
-cotton = "0.0.22"
+cotton = "0.1.0"
 */
 use cotton::prelude::*;
 
