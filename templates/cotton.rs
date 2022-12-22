@@ -1,34 +1,36 @@
-#!/usr/bin/env denim
-
+#!/usr/bin/env -S denim
 /* Cargo.toml
 [package]
 name = "{name}"
 version = "0.1.0"
 authors = ["Anonymous"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-cotton = "0.0.15"
-structopt = "0.3.2"
+cotton = "0.0.22"
 */
-
 use cotton::prelude::*;
 
 /// Example script description
-#[derive(Debug, StructOpt)]
+#[derive(Parser)]
 struct Cli {{
-    #[structopt(flatten)]
-    logging: LoggingOpt,
+    #[command(flatten)]
+    logging: ArgsLogger,
 
-    #[structopt(flatten)]
-    dry_run: DryRunOpt,
+    #[command(flatten)]
+    dry_run: ArgsDryRun,
 }}
 
 fn main() -> FinalResult {{
-    let args = Cli::from_args();
-    init_logger(&args.logging, vec![module_path!()]);
+    let Cli {{
+        logging,
+        dry_run,
+    }} = Cli::parse();
+    setup_logger(logging, vec![module_path!()]);
 
-    warn!("Hello world!");
+    if !dry_run.enabled {{
+        warn!("Hello world!");
+    }}
 
     Ok(())
 }}
