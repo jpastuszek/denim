@@ -11,7 +11,7 @@ const MODE_USER_EXEC: u32 = 0o100;
 
 #[derive(Subcommand)]
 enum ScriptAction {
-    /// Create new scipt from template
+    /// Create new script from template
     New {
         /// Create bare minimum template
         #[arg(short = 'b', long)]
@@ -34,8 +34,16 @@ enum ScriptAction {
         /// Path to script file
         script: PathBuf,
     },
-    /// Build, stage for fast execution and execute
+    /// Execute if already built (may be stale) otherwise same as run
     Exec {
+        /// Path to script file
+        script: PathBuf,
+
+        /// Arguments for the script
+        arguments: Vec<String>, //TODO: OsString not supported
+    },
+    /// Build, stage for fast execution and execute
+    Run {
         /// Path to script file
         script: PathBuf,
 
@@ -47,7 +55,7 @@ enum ScriptAction {
         /// Path to script file
         script: PathBuf,
     },
-    /// Remove all cached build files related to scipt file
+    /// Remove all cached build files related to script file
     Clean {
         /// Path to script file
         script: PathBuf,
@@ -56,7 +64,11 @@ enum ScriptAction {
     CleanAll,
 }
 
-/// Single file rust scritps.
+/// Single file Rust scripts.
+///
+/// If used in '#!' script without arguments or run with just script file path,
+/// a fast path is taken where script is not checked for changes but compiled binary is executed immediately.
+/// If the script was never built, a silent build is performed first.
 #[derive(Parser)]
 struct Cli {
     #[structopt(flatten)]
@@ -67,7 +79,7 @@ struct Cli {
 }
 
 fn write_template<'i>(script: &Path, template: String) -> PResult<()> {
-    write(script, &template).problem_while("writing template to new scipt file")?;
+    write(script, &template).problem_while("writing template to new script file")?;
 
     let file = File::open(script).unwrap();
     let meta = file.metadata().unwrap();
@@ -114,7 +126,7 @@ fn main() -> FinalResult {
     match script_action {
         ScriptAction::New { bare, no_prebuild, script } => {
             let project_name = script.file_stem().ok_or_problem("Path has no file name")?.to_str().ok_or_problem("Script stem is not UTF-8 compatible")?;
-            info!("Generating new sciprt {:?} in {}", project_name, script.display());
+            info!("Generating new script {:?} in {}", project_name, script.display());
 
             if bare {
                 write_template(&script, format!(include_str!("../templates/bare.rs"), name = project_name))?;
@@ -129,6 +141,16 @@ fn main() -> FinalResult {
             }
         }
         ScriptAction::Exec { script, arguments } => {
+            let project = Project::new(script)?;
+            if project.has_binary() {
+                project.execute(&arguments)?;
+                unreachable!()
+            }
+            let cargo = project.cargo()?;
+            cargo.ensure_built(CargoMode::Verbose)?;
+            project.execute(&arguments)?;
+        }
+        ScriptAction::Run { script, arguments } => {
             let project = Project::new(script)?;
             let cargo = project.cargo()?;
             cargo.ensure_built(CargoMode::Verbose)?;
